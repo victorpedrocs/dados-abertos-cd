@@ -5,6 +5,7 @@ import sqlalchemy
 from sqlalchemy.orm import sessionmaker
 from models import *
 from datetime import datetime
+import re
 
 print "Iniciando o script..."
 url_ano_atual = "http://www.camara.gov.br/cotas/AnoAtual.zip"
@@ -27,6 +28,10 @@ session = Session()
 
 print "Criando os objetos a partir de cada objeto no arquivo xml..."
 for despesa in root[0].findall('DESPESA'):
+    #
+    for d in despesa:
+        print d.tag, d.text
+
     nome_parlamentar = despesa.find('txNomeParlamentar')
     identificador_unico = despesa.find('ideCadastro')
     numero_carteira = despesa.find('nuCarteiraParlamentar')
@@ -56,74 +61,110 @@ for despesa in root[0].findall('DESPESA'):
     valor_restituicao = despesa.find('vlrRestituicao')
     indentificador_solicitante = despesa.find('nuDeputadoId')
 
-    # if sigla_partido is not None:
-    partido_obj = get_or_create(session, Partido, sigla=sigla_partido.text )
+    if sigla_partido is not None:
+        partido_obj = get_or_create(session, Partido, sigla=sigla_partido.text )
 
-    # if sigla_estado is not None:
-    estado_obj = get_or_create(session, Estado, sigla=sigla_estado.text )
+    if sigla_estado is not None:
+        estado_obj = get_or_create(session, Estado, sigla=sigla_estado.text )
 
     # if nome_fornecedor is not None and cnpj is not None:
-    fornecedor_obj = get_or_create(session, Fornecedor, nome=nome_fornecedor.text, cnpj=cnpj.text)
+    nome_fornecedor_str = ""
+    cnpj_str = ""
+    if nome_fornecedor is not None:
+        nome_fornecedor_str = nome_fornecedor.text
+    if cnpj is not None:
+        cnpj_str = cnpj.text
+    if cnpj is not None or nome_fornecedor is not None:
+        fornecedor_obj = get_or_create(session, Fornecedor, nome=nome_fornecedor_str, cnpj=cnpj_str)
 
-    #if nome_parlamentar is not None and identificador_unico is not None:
+    # Parlamentar
+    nome_parlamentar_str = ""
+    identificador_unico_str = ""
+    if nome_parlamentar is not None:
+        nome_parlamentar_str = nome_parlamentar.text
+    if identificador_unico is not None:
+        identificador_unico_str = identificador_unico.text
     parlamentar_obj = get_or_create(session, Parlamentar,
-                                    nome=nome_parlamentar.text,
-                                    identificador_unico=int(identificador_unico.text) )
+                                    nome=nome_parlamentar_str,
+                                    identificador_unico=int(identificador_unico_str) )
 
     # if numero_legislatura is not None and numero_carteira is not None:
-    legislatura_obj = get_or_create(session, Legislatura,
-                                    numero=int(numero_legislatura.text),
-                                    numero_carteira=int(numero_carteira.text),
-                                    partido_fk=partido_obj.id,
-                                    estado_fk=estado_obj.id )
+    foreign_key_param = { 'numero': int(numero_legislatura.text), 'numero_carteira': int(numero_carteira.text) }
+    if partido_obj is not None:
+        foreign_key_param['partido_fk'] = partido_obj.id
+    if estado_obj is not None:
+        foreign_key_param['estado_fk'] = estado_obj.id
+    foreign_key_param['parlamentar_fk'] = parlamentar_obj.id
 
+    legislatura_obj = get_or_create(session, Legislatura, **foreign_key_param)
+
+
+    # if legislatura_obj is not None:
+    documento_obj = Documento()
+
+    if numero_documento is not None:
+        documento_obj.numero_documento=numero_documento.text
+
+    if tipo_documento is not None:
+        documento_obj.tipo_documento=tipo_documento.text
+
+    if data_emissao_str is not None:
+        date_string = re.sub('\.[0-9]+', "", data_emissao_str.text)
+        documento_obj.data_emissao=datetime.strptime(date_string, "%Y-%m-%dT%H:%M:%S")
+
+    if valor_documento is not None:
+        documento_obj.valor_documento=float(valor_documento.text)
+
+    if valor_glossa is not None:
+        documento_obj.valor_glossa=float(valor_glossa.text)
+
+    if valor_liquido is not None:
+        documento_obj.valor_liquido=float(valor_liquido.text)
+
+    if mes is not None:
+        documento_obj.mes=int(mes.text)
+
+    if ano is not None:
+        documento_obj.ano=int(ano.text)
+
+    if numero_parcela is not None:
+        documento_obj.numero_parcela=numero_parcela.text
+
+    if nome_passageiro is not None:
+        documento_obj.nome_passageiro=nome_passageiro.text
+
+    if trecho is not None:
+        documento_obj.trecho=trecho.text
+
+    if numero_lote is not None:
+        documento_obj.numero_lote=numero_lote.text
+
+    if numero_ressarcimento is not None:
+        documento_obj.numero_ressarcimento=numero_ressarcimento.text
+
+    if valor_restituicao is not None:
+        documento_obj.valor_restituicao=float(valor_restituicao.text)
+
+    if indentificador_solicitante is not None:
+        documento_obj.indentificador_solicitante=indentificador_solicitante.text
+
+    if numero_subcota is not None:
+        documento_obj.numero_subcota=numero_subcota.text
+
+    if descricao_subcota is not None:
+        documento_obj.descricao_subcota=descricao_subcota.text
+
+    if descricao_subcota is not None:
+        documento_obj.num_especificacao_subcota=num_especificacao_subcota.text
+
+    if descricao_especificacao_subcota is not None:
+        documento_obj.descricao_especificacao_subcota=descricao_especificacao_subcota.text
 
     if legislatura_obj is not None:
-        documento_obj = Documento()
+        documento_obj.legislatura_fk=legislatura_obj.id
 
-        if numero_documento is not None:
-            documento_obj.numero_documento=numero_documento.text
-        if tipo_documento is not None:
-            tipo_documento=int(tipo_documento.text)
-        if data_emissao_str is not None:
-            data_emissao=datetime.strptime(data_emissao_str.text, "%Y-%m-%dT%H:%M:%S")
-        if valor_documento is not None:
-            valor_documento=float(valor_documento.text)
-        if valor_glossa is not None:
-            valor_glossa=float(valor_glossa.text)
-        if valor_liquido is not None:
-            valor_liquido=float(valor_liquido.text)
-        if mes is not None:
-            mes=int(mes.text)
-        if ano is not None:
-            ano=int(ano.text)
-        if numero_parcela is not None:
-            numero_parcela=int(numero_parcela.text)
-        if nome_passageiro is not None:
-            nome_passageiro=nome_passageiro.text
-        if trecho is not None:
-            trecho=trecho.text
-        if numero_lote is not None:
-            numero_lote=int(numero_lote.text)
-        if numero_ressarcimento is not None:
-            numero_ressarcimento=int(numero_ressarcimento.text)
-        if valor_restituicao is not None:
-            valor_restituicao=float(valor_restituicao.text)
-        if indentificador_solicitante is not None:
-            indentificador_solicitante=int(indentificador_solicitante.text)
-        if numero_subcota is not None:
-            numero_subcota=int(numero_subcota.text)
-        if descricao_subcota is not None:
-            descricao_subcota=descricao_subcota.text
-        if descricao_subcota is not None:
-            num_especificacao_subcota=int(num_especificacao_subcota.text)
-        if descricao_especificacao_subcota is not None:
-            descricao_especificacao_subcota=descricao_especificacao_subcota.text
-        if legislatura_obj is not None:
-            legislatura_fk=legislatura_obj.id
-        if fornecedor_obj is not None:
-            fornecedor_fk=fornecedor_obj.id
+    if fornecedor_obj is not None:
+        documento_obj.fornecedor_fk=fornecedor_obj.id
 
-        session.add(documento_obj)
-
+    session.add(documento_obj)
     session.commit()
