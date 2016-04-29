@@ -86,16 +86,19 @@ for despesa in root[0].findall('DESPESA'):
         identificador_unico_str = identificador_unico.text
     parlamentar_obj = get_or_create(session, Parlamentar,
                                     nome=nome_parlamentar_str,
-                                    identificador_unico=int(identificador_unico_str) )
+                                    identificador_unico=identificador_unico_str )
 
     # if numero_legislatura is not None and numero_carteira is not None:
-    foreign_key_param = { 'numero': int(numero_legislatura.text), 'numero_carteira': int(numero_carteira.text) }
+    foreign_key_param = {}
     if partido_obj is not None:
         foreign_key_param['partido_fk'] = partido_obj.id
     if estado_obj is not None:
         foreign_key_param['estado_fk'] = estado_obj.id
+    if numero_legislatura is not None:
+        foreign_key_param['numero'] = numero_legislatura.text
+    if numero_carteira is not None:
+        foreign_key_param['numero_carteira'] = numero_carteira.text
     foreign_key_param['parlamentar_fk'] = parlamentar_obj.id
-
     legislatura_obj = get_or_create(session, Legislatura, **foreign_key_param)
 
 

@@ -40,7 +40,7 @@ class Parlamentar(Base):
     __tablename__ = 'parlamentar'
 
     id = Column( Integer, Sequence( 'parlamentar_sq' ), primary_key=True )
-    identificador_unico = Column( Integer )
+    identificador_unico = Column( String )
     nome = Column( String )
 
     legislaturas = relationship( "Legislatura", backref="parlamentar")
@@ -51,8 +51,8 @@ class Legislatura(Base):
     __tablename__ = 'legislatura'
 
     id = Column( Integer, Sequence( 'legislatura_sq'), primary_key=True )
-    numero = Column( Integer )
-    numero_carteira = Column( Integer )
+    numero = Column( String )
+    numero_carteira = Column( String )
 
     parlamentar_fk = Column( Integer, ForeignKey('parlamentar.id') )
     partido_fk = Column( Integer, ForeignKey('partido.id') )
