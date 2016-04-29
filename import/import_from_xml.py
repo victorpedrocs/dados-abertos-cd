@@ -11,9 +11,10 @@ print "Iniciando o script..."
 url_ano_atual = "http://www.camara.gov.br/cotas/AnoAtual.zip"
 url_ano_anterior = "http://www.camara.gov.br/cotas/AnoAnterior.zip"
 print "Baixando o arquivo do site da camara..."
-file_handler, _ = urllib.urlretrieve(url_ano_atual)
+file_ano_atual, _ = urllib.urlretrieve(url_ano_atual)
+file_ano_anterior, _ = urllib.urlretrieve(url_ano_anterior)
 print "Colocando o arquivo em um objeto..."
-zip_file_object = zipfile.ZipFile(file_handler, 'r')
+zip_file_object = zipfile.ZipFile(file_ano_atual, 'r')
 print "Removendo o arquivo interno..."
 first_file = zip_file_object.namelist()[0]
 print "Colocando o arquivo xml em uma variavel..."
