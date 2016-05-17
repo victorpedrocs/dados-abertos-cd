@@ -15,3 +15,17 @@ Você pode utilizar o arquivo dump, do banco, que se encontra na pasta dump. Lev
 1. Primeiro crie o banco de dados de acordo com as informações no arquivo `models.py`
 1. execute o script `create.py` para criar as tabelas do schema
 1. execute o script `import_from_xml.py` para importar os dados dos arquivos no servidor da câmara
+
+
+### Exemplos dos dados
+
+#### Total de verba gasta por cada parlamentar
+
+https://plot.ly/~HugoDR/88/#plot
+
+<iframe width="900" height="800" frameborder="0" scrolling="no" src="https://plot.ly/~HugoDR/88.embed"></iframe>
+
+
+
+
+
